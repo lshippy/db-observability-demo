@@ -1,3 +1,4 @@
 .env
 backup/
 alloy/secrets/
+.DS_Store
