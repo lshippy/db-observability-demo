@@ -9,10 +9,10 @@ Both use cases leverage Grafana Alloy for comprehensive database observability w
 
 ## Architecture Components
 
-- **MySQL 8.4 LTS**: Database with Performance Schema enabled for detailed query monitoring
-- **Grafana Enterprise**: Visualization and alerting platform (configurable version)
-- **Grafana Alloy**: Collects MySQL metrics and logs, forwards to Grafana Cloud
-- **Load Testing Tools**: Multiple containers to generate database activity and errors
+- MySQL database
+- Grafana Enterprise
+- Grafana Alloy: Send db metrics and logs to Grafana Cloud
+- Load Testing Tools: Multiple containers to generate database activity and errors
 
 ## Prerequisites
 
@@ -214,14 +214,7 @@ docker compose up -d grafana
 docker logs grafana-dbO11y -f
 ```
 
-### 5. Verify Migration
-
-- Check that all dashboards are preserved
-- Verify data sources still work
-- Test user accounts and permissions
-- Confirm settings are maintained
-
-### 6. Rollback if Needed
+### 5. Rollback if Needed
 
 If migration fails, restore from backup:
 
@@ -273,14 +266,13 @@ docker exec alloy-dbO11y cat /etc/alloy/config.alloy
 ## File Structure
 
 ```
-dbo11y-dc/
+db-observability-demo/
 ├── docker-compose.yml          # Main orchestration file
 ├── .env                        # Environment variables (not in git)
 ├── alloy/
 │   ├── config.alloy           # Alloy configuration
 │   └── secrets/
 │       └── mysql_secret_main  # MySQL DSN for Alloy
-├── backup/                    # Backup directory
-│   └── grafana-11.6-backup.tar.gz
+├── backup/                    # Backup directory (created during usage, not in git)
 └── README.md                  # This file
 ```
