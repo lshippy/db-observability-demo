@@ -20,7 +20,7 @@ Both use cases leverage Grafana Alloy for comprehensive database observability w
 - Grafana Cloud account with:
   - Prometheus endpoint for metrics
   - Loki endpoint for logs
-  - API key with write permissions
+  - Cloud Access Policy token with metrics:write and logs:write permissions
 
 ---
 
@@ -47,7 +47,7 @@ GCLOUD_HOSTED_METRICS_URL=https://prometheus-prod-XX-prod-XX-XX.grafana.net/api/
 GCLOUD_HOSTED_METRICS_ID=123456
 GCLOUD_HOSTED_LOGS_URL=https://logs-prod-XX.grafana.net/loki/api/v1/push
 GCLOUD_HOSTED_LOGS_ID=123456
-GCLOUD_RW_API_KEY=your_grafana_cloud_api_key_here
+GCLOUD_ACCESS_POLICY_TOKEN=your_grafana_cloud_access_policy_token_here
 
 # MySQL Passwords
 DB_O11Y_PASSWORD=your_secure_password_here

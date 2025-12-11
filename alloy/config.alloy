@@ -4,7 +4,7 @@ prometheus.remote_write "metrics_service" {
     url = sys.env("GCLOUD_HOSTED_METRICS_URL")
 
     basic_auth {
-      password = sys.env("GCLOUD_RW_API_KEY")
+      password = sys.env("GCLOUD_ACCESS_POLICY_TOKEN")
       username = sys.env("GCLOUD_HOSTED_METRICS_ID")
     }
   }
@@ -16,7 +16,7 @@ loki.write "logs_service" {
     url = sys.env("GCLOUD_HOSTED_LOGS_URL")
 
     basic_auth {
-      password = sys.env("GCLOUD_RW_API_KEY")
+      password = sys.env("GCLOUD_ACCESS_POLICY_TOKEN")
       username = sys.env("GCLOUD_HOSTED_LOGS_ID")
     }
   }
