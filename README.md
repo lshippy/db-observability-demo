@@ -26,15 +26,15 @@ Both use cases leverage Grafana Alloy for comprehensive database observability w
 
 # Use Case 1: Database Load Testing & Performance Monitoring
 
-Perfect for testing database performance, monitoring query patterns, and validating observability setups.
+Use to visualize testing database performance, monitoring query patterns, and validating observability setups in dbO11y
 
 ## Setup for Load Testing
 
 ### 1. Clone and Setup
 
 ```bash
-git clone <your-repo>
-cd dbo11y-dc
+git clone https://github.com/lshippy/db-observability-demo
+cd db-observability-demo
 ```
 
 ### 2. Configure Environment Variables
@@ -148,7 +148,7 @@ docker compose --profile stress down
 
 # Use Case 2: Grafana Database Migration Testing
 
-Perfect for testing Grafana upgrades while preserving data in a MySQL backend database.
+Use for visualizing testing MySQL metrics/logs during Grafana upgrades.
 
 ## Migration Setup
 
