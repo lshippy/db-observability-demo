@@ -1,0 +1,94 @@
+// Grafana Cloud Prometheus remote write endpoint
+prometheus.remote_write "metrics_service" {
+  endpoint {
+    url = sys.env("GCLOUD_HOSTED_METRICS_URL")
+
+    basic_auth {
+      password = sys.env("GCLOUD_RW_API_KEY")
+      username = sys.env("GCLOUD_HOSTED_METRICS_ID")
+    }
+  }
+}
+
+// Grafana Cloud Loki write endpoint
+loki.write "logs_service" {
+  endpoint {
+    url = sys.env("GCLOUD_HOSTED_LOGS_URL")
+
+    basic_auth {
+      password = sys.env("GCLOUD_RW_API_KEY")
+      username = sys.env("GCLOUD_HOSTED_LOGS_ID")
+    }
+  }
+}
+
+// MySQL connection secret
+local.file "mysql_secret_main" {
+  filename  = "/var/lib/alloy/mysql_secret_main"
+  is_secret = true
+}
+
+// MySQL Prometheus exporter
+prometheus.exporter.mysql "integrations_mysqld_exporter_main" {
+  data_source_name  = local.file.mysql_secret_main.content
+  enable_collectors = ["perf_schema.eventsstatements", "perf_schema.eventswaits"]
+}
+
+// Database observability MySQL component
+database_observability.mysql "mysql_main" {
+  data_source_name  = local.file.mysql_secret_main.content
+  forward_to        = [loki.relabel.database_observability_mysql_main.receiver]
+  targets           = prometheus.exporter.mysql.integrations_mysqld_exporter_main.targets
+  enable_collectors = ["query_samples"]
+  
+  // Allow Alloy to update performance_schema settings
+  allow_update_performance_schema_settings = true
+  
+  query_samples {
+    auto_enable_setup_consumers = true
+    disable_query_redaction = true
+  }
+}
+
+// Loki relabeling for database observability logs
+loki.relabel "database_observability_mysql_main" {
+  forward_to = [loki.write.logs_service.receiver]
+  
+  rule {
+    target_label = "job"
+    replacement  = "integrations/db-o11y"
+  }
+  
+  rule {
+    target_label = "instance"
+    replacement  = "mysql_main"
+  }
+}
+
+// Discovery relabeling for metrics
+discovery.relabel "database_observability_mysql_main" {
+  targets = database_observability.mysql.mysql_main.targets
+
+  rule {
+    target_label = "job"
+    replacement  = "integrations/db-o11y"
+  }
+  
+  rule {
+    target_label = "instance"
+    replacement  = "mysql_main"
+  }
+}
+
+// Prometheus scrape configuration
+prometheus.scrape "database_observability_mysql_main" {
+  targets    = discovery.relabel.database_observability_mysql_main.output
+  job_name   = "integrations/db-o11y"
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+
+// Alloy internal logging
+logging {
+  level  = "info"
+  format = "logfmt"
+}

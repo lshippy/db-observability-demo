@@ -1,0 +1,217 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: mysql-dbO11y
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: grafana
+      MYSQL_USER: grafana
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    command: >
+        mysqld
+        --performance-schema-max-digest-length=4096
+        --performance-schema-max-sql-text-length=4096
+        --max-digest-length=4096
+        --performance-schema=ON
+        --performance-schema-consumer-events-statements-current=ON
+        --performance-schema-consumer-events-statements-history=ON
+        --performance-schema-consumer-events-statements-history-long=ON
+        --performance-schema-consumer-events-waits-current=ON
+        --performance-schema-consumer-events-waits-history=ON
+        --performance-schema-consumer-events-waits-history-long=ON
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana-enterprise:12.3.0
+    container_name: grafana-dbO11y
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DATABASE_TYPE=mysql
+      - GF_DATABASE_HOST=mysql:3306
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana
+      - GF_DATABASE_PASSWORD=${GRAFANA_DB_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Alloy
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy-dbO11y
+    restart: unless-stopped
+    ports:
+      - "12345:12345"
+    environment:
+      - GCLOUD_HOSTED_METRICS_URL=${GCLOUD_HOSTED_METRICS_URL}
+      - GCLOUD_HOSTED_METRICS_ID=${GCLOUD_HOSTED_METRICS_ID}
+      - GCLOUD_HOSTED_LOGS_URL=${GCLOUD_HOSTED_LOGS_URL}
+      - GCLOUD_HOSTED_LOGS_ID=${GCLOUD_HOSTED_LOGS_ID}
+      - GCLOUD_RW_API_KEY=${GCLOUD_RW_API_KEY}
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --stability.level=experimental
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+      - ./alloy/secrets:/var/lib/alloy
+      - alloy_data:/var/lib/alloy/data
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Load tester
+  mysql-loadtest:
+    image: mysql:8.0
+    container_name: mysql-loadtest
+    environment:
+      - MYSQL_PWD=${DB_O11Y_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "
+      while true; do
+        for i in {1..10}; do
+          mysql -h mysql -u db-o11y loadtest -e \"
+          INSERT INTO users (username, email) VALUES ('loadtest_\$$RANDOM', 'test_\$$RANDOM@example.com');
+          SELECT COUNT(*) FROM users;
+          SELECT u.*, o.* FROM users u LEFT JOIN orders o ON u.id = o.user_id LIMIT 5;
+          \" &
+        done
+        wait
+        sleep 2
+      done"
+    profiles:
+      - stress
+
+  # Connection exhaustion test
+  mysql-connection-bomb:
+    image: mysql:8.0
+    container_name: mysql-connection-bomb
+    environment:
+      - MYSQL_PWD=${DB_O11Y_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "
+      echo 'Starting connection bomb test...';
+      for i in {1..50}; do
+        mysql -h mysql -u db-o11y -e 'SELECT SLEEP(30), CONNECTION_ID();' &
+      done;
+      wait;
+      echo 'Connection bomb complete';"
+    profiles:
+      - stress
+
+  # Error generator
+  mysql-error-generator:
+    image: mysql:8.0
+    container_name: mysql-error-generator
+    environment:
+      - MYSQL_PWD=${DB_O11Y_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "
+      while true; do
+        mysql -h mysql -u db-o11y loadtest -e 'SELCT * FORM users;' || true;
+        mysql -h mysql -u db-o11y loadtest -e 'SELECT * FROM nonexistent_table;' || true;
+        sleep 5;
+      done"
+    profiles:
+      - stress
+
+  # Memory test
+  mysql-memory-test:
+    image: mysql:8.0
+    container_name: mysql-memory-test
+    environment:
+      - MYSQL_PWD=${DB_O11Y_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "
+      while true; do
+        mysql -h mysql -u db-o11y loadtest -e \"
+        SELECT REPEAT('A', 1000000) as large_string;
+        SELECT GROUP_CONCAT(username SEPARATOR REPEAT('X', 1000)) FROM users;
+        \";
+        sleep 8;
+      done"
+    profiles:
+      - stress
+
+  # CPU intensive queries
+  mysql-cpu-bomb:
+    image: mysql:8.0
+    container_name: mysql-cpu-bomb
+    environment:
+      - MYSQL_PWD=${DB_O11Y_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "
+      while true; do
+        for i in {1..3}; do
+          mysql -h mysql -u db-o11y loadtest -e \"
+          SELECT BENCHMARK(10000000, MD5('CPU intensive test'));
+          SELECT BENCHMARK(5000000, SHA1(RAND()));
+          \" &
+        done;
+        wait;
+        sleep 3;
+      done"
+    profiles:
+      - stress
+
+  # Simple slow query generator
+  mysql-slow-queries:
+    image: mysql:8.0
+    container_name: mysql-slow-queries
+    environment:
+      - MYSQL_PWD=${DB_O11Y_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      bash -c "
+      while true; do
+        # Generate queries with different sleep times
+        mysql -h mysql -u db-o11y loadtest -e \"SELECT SLEEP(2), 'Slow query 2s' as type;\" &
+        mysql -h mysql -u db-o11y loadtest -e \"SELECT SLEEP(5), 'Very slow query 5s' as type;\" &
+        mysql -h mysql -u db-o11y loadtest -e \"SELECT SLEEP(1), 'Medium query 1s' as type;\" &
+        
+        # Heavy computation
+        mysql -h mysql -u db-o11y loadtest -e \"
+        SELECT BENCHMARK(50000000, MD5('slow query test')) as benchmark_result;
+        \" &
+        
+        wait;
+        sleep 10;
+      done"
+    profiles:
+      - stress
+      
+volumes:
+  mysql_data:
+  grafana_data:
+  alloy_data:
