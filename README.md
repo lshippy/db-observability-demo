@@ -97,8 +97,11 @@ GRANT SELECT ON performance_schema.* TO 'db-o11y'@'%';
 GRANT SELECT ON mysql.* TO 'db-o11y'@'%';
 GRANT UPDATE ON performance_schema.setup_consumers TO 'db-o11y'@'%';
 
-# Create test database and tables (only needed for load testing)
+# Create test database and tables (for load testing and schema monitoring)
 CREATE DATABASE IF NOT EXISTS loadtest;
+
+# Grant SELECT permission (required for schema_details collector to read table structures)
+GRANT SELECT ON loadtest.* TO 'db-o11y'@'%';
 GRANT INSERT, UPDATE, DELETE, CREATE ON loadtest.* TO 'db-o11y'@'%';
 
 USE loadtest;
@@ -215,6 +218,9 @@ CREATE USER 'db-o11y'@'%' IDENTIFIED BY 'your_secure_password_here';
 GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'db-o11y'@'%';
 GRANT SELECT ON performance_schema.* TO 'db-o11y'@'%';
 GRANT SELECT ON mysql.* TO 'db-o11y'@'%';
+
+# Grant SELECT on Grafana database (required for schema_details collector to monitor Grafana's database structure)
+GRANT SELECT ON grafana.* TO 'db-o11y'@'%';
 GRANT UPDATE ON performance_schema.setup_consumers TO 'db-o11y'@'%';
 
 FLUSH PRIVILEGES;
