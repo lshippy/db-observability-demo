@@ -5,7 +5,7 @@ This repository provides two main use cases for MySQL database observability:
 1. **[Database Load Testing & Performance Monitoring](#use-case-1-database-load-testing--performance-monitoring)** - Generate synthetic database load and monitor performance
 2. **[Grafana Database Migration Testing](#use-case-2-grafana-database-migration-testing)** - Test Grafana upgrades using MySQL as the backend database
 
-Both use cases leverage Grafana Alloy for comprehensive database observability with Grafana Cloud.
+Both use cases leverage Grafana Alloy for integrating with database observability app in Grafana Cloud.
 
 ## Architecture Components
 
