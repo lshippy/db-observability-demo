@@ -50,8 +50,8 @@ GCLOUD_HOSTED_LOGS_ID=123456
 GCLOUD_ACCESS_POLICY_TOKEN=your_grafana_cloud_access_policy_token_here
 
 # MySQL Passwords
-DB_O11Y_PASSWORD=your_secure_password_here
-GRAFANA_DB_PASSWORD=your_grafana_db_password_here
+DB_O11Y_PASSWORD=your_secure_password_here          # Password for 'db-o11y' MySQL monitoring user
+GRAFANA_DB_PASSWORD=your_grafana_db_password_here    # Password for 'grafana' MySQL user (Grafana's backend database)
 ```
 
 ### 3. Start Core Services
