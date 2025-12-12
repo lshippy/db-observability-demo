@@ -257,10 +257,10 @@ grafana:
 
 ```bash
 # Stop Grafana
-docker compose stop grafana
+docker compose --profile grafana down
 
 # Start with new version
-docker compose up -d grafana
+docker compose --profile grafana up -d
 
 # Monitor logs for migration progress
 docker logs grafana-dbO11y -f
