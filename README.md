@@ -26,7 +26,7 @@ Both use cases leverage Grafana Alloy for comprehensive database observability w
 
 # Use Case 1: Database Load Testing & Performance Monitoring
 
-Use to visualize testing database performance, monitoring query patterns, and validating observability setups in dbO11y
+Use to visualize testing database performance, monitoring query patterns, and validating observability setups in dbO11y app
 
 ## Setup for Load Testing
 
@@ -56,7 +56,7 @@ GRAFANA_DB_PASSWORD=your_grafana_db_password_here    # Password for 'grafana' My
 
 ### 3. Start MySQL
 
-Start MySQL first to configure the database users:
+Start MySQL first to configure the database observability db user and loadtest database:
 
 ```bash
 docker compose up -d mysql
@@ -64,13 +64,13 @@ docker compose up -d mysql
 
 ### 4. Configure MySQL Users
 
-Connect to MySQL and create the observability user. For detailed MySQL setup information, refer to the [official Grafana documentation](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/get-started/mysql/#set-up-the-mysql-database).
+Connect to MySQL and create the database observability user. For detailed MySQL setup information, refer to the [official Grafana documentation](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/get-started/mysql/#set-up-the-mysql-database).
 
 ```bash
 # Connect to MySQL
 docker exec -it mysql-dbO11y mysql -u root -prootpass
 
-# Create observability user (required for both use cases)
+# Create database observability user (required for both use cases)
 # Use the same password as DB_O11Y_PASSWORD in .env
 CREATE USER 'db-o11y'@'%' IDENTIFIED BY 'your_secure_password_here';
 
@@ -165,7 +165,7 @@ docker compose --profile stress down
 
 # Use Case 2: Grafana Database Migration Testing
 
-Use for visualizing testing MySQL metrics/logs during Grafana upgrades.
+Use for visualizing testing MySQL metrics/logs in dbO11y app during Grafana upgrades.
 
 ## Migration Setup
 
