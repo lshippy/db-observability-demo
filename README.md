@@ -54,19 +54,12 @@ DB_O11Y_PASSWORD=your_secure_password_here          # Password for 'db-o11y' MyS
 GRAFANA_DB_PASSWORD=your_grafana_db_password_here    # Password for 'grafana' MySQL user (Grafana's backend database)
 ```
 
-### 3. Start Core Services
+### 3. Start MySQL
 
-Choose the services you need for your use case:
+Start MySQL first to configure the database users:
 
 ```bash
-# Option 1: MySQL + Alloy (database monitoring to Grafana Cloud)
-docker compose --profile monitoring up -d
-
-# Option 2: MySQL + Grafana (for migration testing)
-docker compose --profile grafana up -d
-
-# Option 3: Everything (full stack)
-docker compose --profile monitoring --profile grafana up -d
+docker compose up -d mysql
 ```
 
 ### 4. Configure MySQL Users
@@ -119,13 +112,28 @@ Update the MySQL connection string for Alloy (replace `your_secure_password_here
 printf "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_secret_main
 ```
 
-### 6. Access Services
+### 6. Start Alloy
+
+Now start Alloy to begin database monitoring:
+
+```bash
+docker compose --profile monitoring up -d
+```
+
+**Optional**: Add Grafana as well (will monitor Grafana database, too)
+
+```bash
+# Start Grafana as well (optional)
+docker compose --profile grafana up -d
+```
+
+### 7. Access Services
 
 - **Grafana**: http://localhost:3000 (admin/admin) - if started
 - **Alloy**: http://localhost:12345
 - **MySQL**: localhost:3306
 
-## Running Load Tests
+## Running Load Tests against loadtest database
 
 Start various load testing scenarios:
 
@@ -263,9 +271,13 @@ docker logs grafana-dbO11y -f
 If migration fails, restore from backup:
 
 ```bash
-# Stop services
-docker compose down
+# Stop Grafana
+docker compose --profile grafana down
+```
 
+Revert Grafana image version in `docker-compose.yml` to previous version (example: change from `grafana/grafana-enterprise:12.3.0` back to `grafana/grafana-enterprise:11.6.0`).
+
+```bash
 # Remove current Grafana data
 docker volume rm dbo11y-dc_grafana_data
 
@@ -275,9 +287,8 @@ docker run --rm \
   -v $(pwd)/backup:/backup \
   alpine tar xzf /backup/grafana-YYYYMMDD-HHMMSS-backup.tar.gz -C /target
 
-# Revert docker-compose.yml to previous version
-# Start services
-docker compose up -d
+# Start Grafana again
+docker compose --profile grafana up -d
 ```
 
 ---
