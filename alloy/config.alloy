@@ -39,7 +39,7 @@ database_observability.mysql "mysql_main" {
   data_source_name  = local.file.mysql_secret_main.content
   forward_to        = [loki.relabel.database_observability_mysql_main.receiver]
   targets           = prometheus.exporter.mysql.integrations_mysqld_exporter_main.targets
-  enable_collectors = ["query_samples"]
+  enable_collectors = ["query_samples", "schema_details"]
   
   // Allow Alloy to update performance_schema settings
   allow_update_performance_schema_settings = true
