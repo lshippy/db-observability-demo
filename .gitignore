@@ -2,3 +2,4 @@
 backup/
 alloy/secrets/
 .DS_Store
+**/.DS_Store
