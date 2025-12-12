@@ -1,5 +1,9 @@
 # MySQL Database Observability with Grafana and Alloy
 
+> **TESTING AND DEMONSTRATION PURPOSES ONLY**
+> 
+> This repository is designed for testing, learning, and demonstration purposes. It is **NOT intended for production use**. The configurations use default passwords, simplified security settings, and are optimized for ease of setup rather than security or performance.
+
 This repository provides two main use cases for MySQL database observability:
 
 1. **[Database Load Testing & Performance Monitoring](#use-case-1-database-load-testing--performance-monitoring)** - Generate synthetic database load and monitor performance
