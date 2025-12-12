@@ -171,18 +171,14 @@ grafana:
   image: grafana/grafana-enterprise:11.6.0  # Starting version
 ```
 
-### 2. Configure Grafana with MySQL Backend
-
-```bash
-# Start services for migration testing
-docker compose --profile grafana --profile monitoring up -d
-```
-
-### 3. Configure MySQL Users (if not done already)
+### 2. Configure MySQL Users (if not done already)
 
 If you skipped Use Case 1, you need to create the observability user. For detailed MySQL setup information, refer to the [official Grafana documentation](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/get-started/mysql/#set-up-the-mysql-database).
 
 ```bash
+# Start MySQL first
+docker compose up -d mysql
+
 # Connect to MySQL
 docker exec -it mysql-dbO11y mysql -u root -prootpass
 
@@ -199,11 +195,18 @@ FLUSH PRIVILEGES;
 EXIT;
 ```
 
-### 4. Update Alloy Secret (if not done already)
+### 3. Update Alloy Secret (if not done already)
 
 ```bash
 printf "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_secret_main
 # Replace 'your_secure_password_here' with the same password used for DB_O11Y_PASSWORD
+```
+
+### 4. Start Grafana and Alloy
+
+```bash
+# Start services for migration testing
+docker compose --profile grafana --profile monitoring up -d
 ```
 
 ### 5. Access Grafana
