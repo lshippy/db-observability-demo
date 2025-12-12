@@ -76,6 +76,8 @@ docker exec -it mysql-dbO11y mysql -u root -prootpass
 
 # Create database and user for observability
 CREATE DATABASE IF NOT EXISTS loadtest;
+
+# Use the same password as DB_O11Y_PASSWORD in .env
 CREATE USER 'db-o11y'@'%' IDENTIFIED BY 'your_secure_password_here';
 
 # Grant necessary permissions
@@ -109,7 +111,7 @@ FLUSH PRIVILEGES;
 
 ### 5. Update Alloy Secret
 
-Update the MySQL connection string for Alloy:
+Update the MySQL connection string for Alloy (replace `your_secure_password_here` with the same password used for `DB_O11Y_PASSWORD`):
 
 ```bash
 echo "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_secret_main
