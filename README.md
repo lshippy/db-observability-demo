@@ -22,6 +22,19 @@ Both use cases leverage Grafana Alloy for integrating with database observabilit
   - Loki endpoint for logs
   - Cloud Access Policy token with metrics:write and logs:write permissions
 
+## Expected Outcome
+
+After performing the steps in either of the use cases below, your MySQL database should appear in the Grafana Cloud Database Observability app:
+
+1. **Access Grafana Cloud**: Log into your Grafana Cloud instance
+2. **Navigate to Database Observability**: Go to the Database Observability app
+3. **View Queries Overview**: Your MySQL database should appear in the [Queries Overview dashboard](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/navigate-queries-overview/)
+4. **Monitor Activity**: You should see:
+   - Query metrics and performance data
+   - Load test activity (if running stress tests)
+   - Database migration activity (during Grafana upgrades)
+   - Real-time query samples and wait events
+
 ---
 
 # Use Case 1: Database Load Testing & Performance Monitoring
@@ -133,6 +146,7 @@ docker compose --profile grafana up -d
 - **Alloy**: http://localhost:12345
 - **MySQL**: localhost:3306
 
+
 ## Running Load Tests against loadtest database
 
 Start various load testing scenarios:
@@ -224,6 +238,7 @@ docker compose --profile grafana --profile monitoring up -d
 # URL: http://localhost:3000 (admin/admin)
 ```
 
+
 ### 6. Create Backup Before Migration
 
 Always backup before upgrading:
@@ -292,6 +307,7 @@ docker compose --profile grafana up -d
 ```
 
 ---
+
 
 ## Troubleshooting
 
