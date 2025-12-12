@@ -298,13 +298,16 @@ docker compose --profile grafana up -d
 ## Useful Commands
 
 ```bash
-# View all logs
-docker compose logs -f
+# View all logs (core services)
+docker compose logs -f mysql grafana alloy
+
+# View all logs including load tests (if running)
+docker compose --profile stress logs -f mysql grafana alloy
 
 # View specific service logs
-docker logs alloy-dbO11y -f
-docker logs grafana-dbO11y -f
-docker logs mysql-dbO11y -f
+docker compose logs alloy -f
+docker compose logs grafana -f
+docker compose logs mysql -f
 
 # Check MySQL Performance Schema
 docker exec -it mysql-dbO11y mysql -u root -prootpass -e "
@@ -327,7 +330,7 @@ db-observability-demo/
 ├── alloy/
 │   ├── config.alloy           # Alloy configuration
 │   └── secrets/
-│       └── mysql_secret_main  # MySQL DSN for Alloy
+│       └── mysql_secret_main  # MySQL DSN for Alloy (created during setup)
 ├── backup/                    # Backup directory (created during usage, not in git)
 └── README.md                  # This file
 ```
