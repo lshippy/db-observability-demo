@@ -29,7 +29,7 @@ services:
       retries: 10
 
   grafana:
-    image: grafana/grafana-enterprise:12.3.0
+    image: grafana/grafana-enterprise:11.6.0
     container_name: grafana-dbO11y
     restart: unless-stopped
     ports:
@@ -80,7 +80,7 @@ services:
 
   # Load tester
   mysql-loadtest:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysql-loadtest
     environment:
       - MYSQL_PWD=${DB_O11Y_PASSWORD}
@@ -105,7 +105,7 @@ services:
 
   # Connection exhaustion test
   mysql-connection-bomb:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysql-connection-bomb
     environment:
       - MYSQL_PWD=${DB_O11Y_PASSWORD}
@@ -125,7 +125,7 @@ services:
 
   # Error generator
   mysql-error-generator:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysql-error-generator
     environment:
       - MYSQL_PWD=${DB_O11Y_PASSWORD}
@@ -144,7 +144,7 @@ services:
 
   # Memory test
   mysql-memory-test:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysql-memory-test
     environment:
       - MYSQL_PWD=${DB_O11Y_PASSWORD}
@@ -165,7 +165,7 @@ services:
 
   # CPU intensive queries
   mysql-cpu-bomb:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysql-cpu-bomb
     environment:
       - MYSQL_PWD=${DB_O11Y_PASSWORD}
@@ -189,7 +189,7 @@ services:
 
   # Simple slow query generator
   mysql-slow-queries:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: mysql-slow-queries
     environment:
       - MYSQL_PWD=${DB_O11Y_PASSWORD}
