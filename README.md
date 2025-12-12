@@ -56,14 +56,17 @@ GRAFANA_DB_PASSWORD=your_grafana_db_password_here    # Password for 'grafana' My
 
 ### 3. Start Core Services
 
-For load testing, you can optionally skip Grafana and just run MySQL + Alloy:
+Choose the services you need for your use case:
 
 ```bash
-# Start MySQL and Alloy only (for pure database monitoring)
-docker compose up -d mysql alloy
+# Option 1: MySQL + Alloy (database monitoring to Grafana Cloud)
+docker compose --profile monitoring up -d
 
-# OR start everything including Grafana
-docker compose up -d mysql grafana alloy
+# Option 2: MySQL + Grafana (for migration testing)
+docker compose --profile grafana up -d
+
+# Option 3: Everything (full stack)
+docker compose --profile monitoring --profile grafana up -d
 ```
 
 ### 4. Configure MySQL Users
@@ -107,6 +110,7 @@ CREATE TABLE orders (
 );
 
 FLUSH PRIVILEGES;
+EXIT;
 ```
 
 ### 5. Update Alloy Secret
@@ -114,7 +118,7 @@ FLUSH PRIVILEGES;
 Update the MySQL connection string for Alloy (replace `your_secure_password_here` with the same password used for `DB_O11Y_PASSWORD`):
 
 ```bash
-echo "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_secret_main
+printf "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_secret_main
 ```
 
 ### 6. Access Services
@@ -128,10 +132,15 @@ echo "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_
 Start various load testing scenarios:
 
 ```bash
-# Start all stress testing services
+# Start all stress testing services (this will also start MySQL)
 docker compose --profile stress up -d
 
-# Or start individual tests
+# Or combine with monitoring/grafana profiles as needed
+docker compose --profile stress --profile monitoring up -d              # Stress + Alloy
+docker compose --profile stress --profile grafana up -d                 # Stress + Grafana  
+docker compose --profile stress --profile monitoring --profile grafana up -d  # Everything
+
+# Or start individual tests (requires MySQL to be running first)
 docker compose up -d mysql-loadtest        # Basic CRUD operations
 docker compose up -d mysql-slow-queries    # Slow query generation
 docker compose up -d mysql-cpu-bomb        # CPU intensive queries
@@ -167,8 +176,8 @@ grafana:
 ### 2. Configure Grafana with MySQL Backend
 
 ```bash
-# Start services
-docker compose up -d mysql grafana alloy
+# Start services for migration testing
+docker compose --profile grafana --profile monitoring up -d
 
 # Access Grafana and configure dashboards, data sources, users, etc.
 # URL: http://localhost:3000 (admin/admin)

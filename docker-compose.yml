@@ -46,6 +46,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    profiles:
+      - grafana
 
   # Alloy
   alloy:
@@ -73,6 +75,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    profiles:
+      - monitoring
 
   # Load tester
   mysql-loadtest:
