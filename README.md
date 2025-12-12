@@ -71,28 +71,26 @@ docker compose --profile monitoring --profile grafana up -d
 
 ### 4. Configure MySQL Users
 
-Connect to MySQL and create the observability user:
+Connect to MySQL and create the observability user. For detailed MySQL setup information, refer to the [official Grafana documentation](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/get-started/mysql/#set-up-the-mysql-database).
 
 ```bash
 # Connect to MySQL
 docker exec -it mysql-dbO11y mysql -u root -prootpass
 
-# Create database and user for observability
-CREATE DATABASE IF NOT EXISTS loadtest;
-
+# Create observability user (required for both use cases)
 # Use the same password as DB_O11Y_PASSWORD in .env
 CREATE USER 'db-o11y'@'%' IDENTIFIED BY 'your_secure_password_here';
 
-# Grant necessary permissions
+# Grant necessary permissions for database monitoring
 GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'db-o11y'@'%';
 GRANT SELECT ON performance_schema.* TO 'db-o11y'@'%';
 GRANT SELECT ON mysql.* TO 'db-o11y'@'%';
 GRANT UPDATE ON performance_schema.setup_consumers TO 'db-o11y'@'%';
 
-# Grant permissions for load testing
+# Create test database and tables (only needed for load testing)
+CREATE DATABASE IF NOT EXISTS loadtest;
 GRANT INSERT, UPDATE, DELETE, CREATE ON loadtest.* TO 'db-o11y'@'%';
 
-# Create test tables
 USE loadtest;
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -178,12 +176,44 @@ grafana:
 ```bash
 # Start services for migration testing
 docker compose --profile grafana --profile monitoring up -d
+```
 
+### 3. Configure MySQL Users (if not done already)
+
+If you skipped Use Case 1, you need to create the observability user. For detailed MySQL setup information, refer to the [official Grafana documentation](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/get-started/mysql/#set-up-the-mysql-database).
+
+```bash
+# Connect to MySQL
+docker exec -it mysql-dbO11y mysql -u root -prootpass
+
+# Create observability user (use the same password as DB_O11Y_PASSWORD in .env)
+CREATE USER 'db-o11y'@'%' IDENTIFIED BY 'your_secure_password_here';
+
+# Grant necessary permissions for database monitoring
+GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'db-o11y'@'%';
+GRANT SELECT ON performance_schema.* TO 'db-o11y'@'%';
+GRANT SELECT ON mysql.* TO 'db-o11y'@'%';
+GRANT UPDATE ON performance_schema.setup_consumers TO 'db-o11y'@'%';
+
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+### 4. Update Alloy Secret (if not done already)
+
+```bash
+printf "db-o11y:your_secure_password_here@tcp(mysql:3306)/" > alloy/secrets/mysql_secret_main
+# Replace 'your_secure_password_here' with the same password used for DB_O11Y_PASSWORD
+```
+
+### 5. Access Grafana
+
+```bash
 # Access Grafana and configure dashboards, data sources, users, etc.
 # URL: http://localhost:3000 (admin/admin)
 ```
 
-### 3. Create Backup Before Migration
+### 6. Create Backup Before Migration
 
 Always backup before upgrading:
 
@@ -204,7 +234,7 @@ docker run --rm \
   alpine tar czf /backup/mysql-$(date +%Y%m%d-%H%M%S)-backup.tar.gz -C /source .
 ```
 
-### 4. Perform Migration
+### 7. Perform Migration
 
 Update Grafana version and restart:
 
@@ -225,7 +255,7 @@ docker compose up -d grafana
 docker logs grafana-dbO11y -f
 ```
 
-### 5. Rollback if Needed
+### 8. Rollback if Needed
 
 If migration fails, restore from backup:
 
